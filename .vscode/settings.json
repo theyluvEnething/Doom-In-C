@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "stdint.h": "c",
+        "stdbool.h": "c",
+        "func.h": "c",
+        "vector2.h": "c",
+        "renderer.h": "c",
+        "frame.h": "c",
+        "input.h": "c",
+        "time.h": "c",
+        "stdio.h": "c"
+    }
+}
