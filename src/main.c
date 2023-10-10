@@ -44,9 +44,6 @@ static HDC debug_device_context = 0;
 
 
 /* WINDOW */
-const int game_window_width = 1080; const int game_window_height = 720;
-const int debug_window_width = 800; const int debug_window_height = 500;
-
 static bool mn_wnd_running = true; static bool mn_wnd_minimized = false;
 static bool db_wnd_running = true; static bool db_wnd_minimized = false;
 
@@ -70,8 +67,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
     Initialize();
 
 
-    float mn_ratio = game_window_width / (float)game_window_height;
-    float db_ratio = debug_window_width / (float)debug_window_height;
+    float mn_ratio = MAIN_SCREEN_WIDTH / (float)MAIN_SCREEN_HEIGHT;
+    float db_ratio = DEBUG_SCREEN_WIDTH / (float)DEBUG_SCREEN_HEIGHT;
     if (mn_ratio != db_ratio) {
         print_warning("Incompatible ratio between main window and debug window.\n");
     }
@@ -114,7 +111,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     HWND game_hwnd = CreateWindowEx(0, CLASS_NAME, "Doom",
                                 WS_OVERLAPPEDWINDOW|WS_VISIBLE,
                                 CW_USEDEFAULT, CW_USEDEFAULT,
-                                game_window_width, game_window_height,
+                                MAIN_SCREEN_WIDTH, MAIN_SCREEN_HEIGHT,
                                 0, 0, hInstance, 0);
 
     printf("Initializing Game Window. (%i | %i)\n", frame.width, frame.height);
@@ -122,7 +119,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     HWND debug_hwnd = CreateWindowEx(0, CLASS_NAME_d, "Debug",
                                 WS_OVERLAPPEDWINDOW|WS_VISIBLE,
                                 CW_USEDEFAULT, CW_USEDEFAULT,
-                                debug_window_width, debug_window_height,
+                                DEBUG_SCREEN_WIDTH, DEBUG_SCREEN_HEIGHT,
                                 0, 0, hInstance, 0);
 
     printf("Initializing Debug Window. (%i | %i)\n", debug.width, debug.height);
@@ -155,29 +152,18 @@ int WINAPI WinMain(HINSTANCE hInstance,
         pTime = cTime;
         printf("Frame rendered at %.2lf ms\n", 1000/elapsed);
 
-
 		static MSG message = { 0 };
 		while(PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }        
 
-        static int keyboard_x = 0, keyboard_y = 0;
-        if(keyboard[VK_RIGHT] || keyboard['D']) ++keyboard_x;
-        if(keyboard[VK_LEFT]  || keyboard['A']) --keyboard_x;
-        if(keyboard[VK_UP]    || keyboard['W']) ++keyboard_y;
-        if(keyboard[VK_DOWN]  || keyboard['S']) --keyboard_y;
-
-        if(keyboard_x < 0)			keyboard_x = 0;
-		if(keyboard_x > frame.width-1)	keyboard_x = frame.width-1;
-		if(keyboard_y < 0)			keyboard_y = 0;
-		if(keyboard_y > frame.height-1)	keyboard_y = frame.height-1;
-
-
         x1 = mouse.x;
         y1 = mouse.y;
-
         InputCollection();
 
         if (!is_minimized(&frame)) {
             background(0x000000, &frame);
+
+            draw_vert_line(vec2(200, 500), 100, 0xFF0000, &frame);
+
             update_screen(&game_hwnd);
         }
         if (!is_minimized(&debug)) {
@@ -185,30 +171,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
             update_screen(&debug_hwnd);
         }
     }
-
-    /* UPDATE RENDER */
-
     printf("=========================================\n");
     PostQuitMessage(0);
     return 0;
 }
 
 static void InputCollection() {
-    // switch ((uint8_t)input) {
-    //     case 8:
-    //         printf("[%i | DEL]\n", (uint8_t)input, (uint8_t)input); 
-    //     break;
-    //     case 13:
-    //         printf("[%i | ENTER]\n", (uint8_t)input, (uint8_t)input);
-    //     break;
-    //     case 27:
-    //         printf("[%i | ESC]\n", (uint8_t)input, (uint8_t)input);
-    //     break;
-    //     default:
-    //         printf("[%i | %lc]\n", (uint8_t)input, (uint8_t)input);
-    //     break;
-    // }
-
     HandleKeyboardInput(keyboard);
 }
 

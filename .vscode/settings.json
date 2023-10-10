@@ -8,6 +8,7 @@
         "frame.h": "c",
         "input.h": "c",
         "time.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "windows.h": "c"
     }
 }
