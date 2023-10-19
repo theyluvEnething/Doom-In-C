@@ -2,8 +2,8 @@
 #define LEVEL_H
 
 #include "func.h"
-#include "headers/vector2.h"
-#include "headers/player.h"
+#include "vector2.h"
+#include "player.h"
 
 // sector id for "no sector"
 #define SECTOR_NONE 0
@@ -24,9 +24,5 @@ struct level {
     struct { struct sector arr[32]; size_t n; } sectors;
     struct { struct wall arr[128]; size_t n; } walls;
 };
-
-inline v2 intersect_segs();
-
-inline v2 world_pos_to_camera(v2 p, struct player player);
 
 #endif

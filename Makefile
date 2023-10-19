@@ -1,4 +1,4 @@
-src = src/main.c src/renderer.c src/func.c src/vector2.c src/input.c
+src = src/main.c
 lib = -lgdi32
 warning = -Wall -Wextra -Q --help=warning
 
