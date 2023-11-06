@@ -12,6 +12,10 @@
         "windows.h": "c",
         "level.h": "c",
         "player.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "sdl.h": "c",
+        "llib.h": "c",
+        "var.h": "c",
+        "defs.h": "c"
     }
 }

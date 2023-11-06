@@ -6,6 +6,7 @@
 
 [WALL]
 # SECTOR 1: 0..7
+# a.x a.y b.x b.y portal
 4 1 2 1 0
 5 2 4 1 0
 5 3 5 2 0

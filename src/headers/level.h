@@ -1,28 +1,35 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
-#include "func.h"
+#include "defs.h"
 #include "vector2.h"
-#include "player.h"
+#include "renderer.h"
 
-// sector id for "no sector"
-#define SECTOR_NONE 0
-#define SECTOR_MAX 128
+
+#define MAX_SECTORS 32
+#define MAX_WALLS 256
+
+typedef struct {
+    v2 p1, p2;
+} lineseg;
 
 typedef struct wall {
-    vector2 a, b;
+    v2 a, b;
     int portal;
+    struct wall *next;
 } wall;
 
 struct sector {
     u8 id;
-    size_t firstwall, nwalls;
     f32 zfloor, zceil;
+    struct { struct wall *fwall; usize n; } list;
 };
 
 struct level {
-    struct { struct sector arr[32]; size_t n; } sectors;
-    struct { struct wall arr[128]; size_t n; } walls;
+    struct { struct sector arr[128]; usize n; } sectors;
+    u16 y_lo[SCREEN_WIDTH], y_hi[SCREEN_WIDTH];
 };
+
+int load_level(const char* path, struct level* level);
 
 #endif

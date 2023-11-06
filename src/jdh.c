@@ -2,7 +2,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <SDL.h>
+#include <math.h>
+#include <string.h>
+#include <windows.h>
+#include <SDL2/SDL.h>
 
 #define ASSERT(_e, ...) if (!(_e)) { fprintf(stderr, __VA_ARGS__); exit(1); }
 
@@ -274,7 +277,6 @@ static void render() {
     while (queue.n != 0) {
         // grab tail of queue
         struct queue_entry entry = queue.arr[--queue.n];
-
         if (sectdraw[entry.id]) {
             continue;
         }
@@ -589,17 +591,28 @@ int main(int argc, char *argv[]) {
         state.camera.anglecos = cos(state.camera.angle);
         state.camera.anglesin = sin(state.camera.angle);
 
-        if (keystate[SDLK_UP & 0xFFFF]) {
+        if (keystate[SDL_SCANCODE_W & 0xFFFF]) {
             state.camera.pos = (v2) {
                 state.camera.pos.x + (move_speed * state.camera.anglecos),
                 state.camera.pos.y + (move_speed * state.camera.anglesin),
             };
         }
-
-        if (keystate[SDLK_DOWN & 0xFFFF]) {
+        if (keystate[SDL_SCANCODE_S & 0xFFFF]) {
             state.camera.pos = (v2) {
                 state.camera.pos.x - (move_speed * state.camera.anglecos),
                 state.camera.pos.y - (move_speed * state.camera.anglesin),
+            };
+        }
+        if (keystate[SDL_SCANCODE_A & 0xFFFF]) {
+            state.camera.pos = (v2) {
+                state.camera.pos.x - (move_speed * cos(state.camera.angle-PI_2)),
+                state.camera.pos.y - (move_speed * sin(state.camera.angle-PI_2)),
+            };
+        }
+        if (keystate[SDL_SCANCODE_D & 0xFFFF]) {
+            state.camera.pos = (v2) {
+                state.camera.pos.x - (move_speed * cos(state.camera.angle+PI_2)),
+                state.camera.pos.y - (move_speed * sin(state.camera.angle+PI_2)),
             };
         }
 
@@ -647,8 +660,6 @@ int main(int argc, char *argv[]) {
                     }
                 }
             }
-
-
 done:
             if (!found) {
                 fprintf(stderr, "player is not in a sector!");
