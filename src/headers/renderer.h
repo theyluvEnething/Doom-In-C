@@ -15,6 +15,8 @@ void background(int color, struct frame* frame);
 bool is_minimized(struct frame* frame);
 void verline(v2 pos, int height, int color, struct frame* frame);
 void drawline(v2 v0, v2 v1, int width, int color, struct frame* frame);
-v2 WorldPosToFramePos(v2 vec, f32 zoom, struct frame *frame);
+void drawpixel(v2 pos, int color, struct frame* frame);
 
+v2 WorldPosToFramePos(v2 vec, f32 zoom, struct frame *frame);
+v2 AddCameraOffset(v2 vec, v2 camera);
 #endif

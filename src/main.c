@@ -51,6 +51,8 @@ struct frame debug = {0};
 bool keyboard[256] = {0};
 struct {
     int x, y;
+    bool dragging;
+    v2 pos, pPos;
     uint_least8_t buttons;
 } mouse;
 enum 
@@ -87,10 +89,9 @@ f32 zoom = 1;
 static void HandleKeyboardInput(bool keyboard[]);
 
 void Initialize() {
-    player.lookangle = 0.42;
-    player.pos.x = 451.96;
-    player.pos.y = 209.24;
-
+    player.lookangle = 0;
+    player.pos.x = 0;
+    player.pos.y = 0;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -207,52 +208,68 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 
     pTime = clock();
+
+    bool wasDragging = false;
+    v2 cameraOffset = (v2){0, 0};
+    v2 dragDifference = (v2){0,0};
+
     while (mn_wnd_running || db_wnd_running) 
     {
+        mouse.pos = (v2){mouse.x, mouse.y};
         clock_t cTime = clock();
         double elapsed = (double)(cTime - pTime) / CLOCKS_PER_SEC * 1000;
         if (elapsed < frame_duration) continue;
         pTime = cTime;
-        printf("Frame rendered at %.2lf ms\n", 1000/elapsed);
+        //printf("Frame rendered at %.2lf ms\n", 1000/elapsed);
 
 		static MSG message = { 0 };
 		while(PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }        
       
         HandleKeyboardInput(keyboard);
 
+
+
         if (!is_minimized(&frame)) {
             background(0x000000, &frame);
             verline(vec2(200, 500), 100, 0xFFFFFF, &frame);
 
-       
+
+            drawline(vec2(DEBUG_SCREEN_WIDTH/2, DEBUG_SCREEN_HEIGHT/2), vec2(mouse.x, mouse.y), 1, 0xFFFFFF, &frame);
+            verline(vec2(mouse.x, mouse.y), 100, 0xFFFFFF, &frame);
+            verline(vec2(mouse.x-1, mouse.y), 100, 0xFFFFFF, &frame);
+            verline(vec2(mouse.x+1, mouse.y), 100, 0xFFFFFF, &frame);
+
+            frame.pixels[0] = 0xFFFFFF;
+            
             InvalidateRect(game_hwnd, NULL, false);
             UpdateWindow(game_hwnd);
         }
         if (!is_minimized(&debug)) {
-            
-
             background(0x000000, &debug);
-            drawline(vec2(DEBUG_SCREEN_WIDTH/2, DEBUG_SCREEN_HEIGHT/2), vec2(mouse.x, mouse.y), 1, 0xFFFFFF, &debug);
-
-            verline(vec2(mouse.x, mouse.y), 3, 0xFFFFFF, &debug);
-
-            drawline(vec2(50, 50), vec2(50, 100), 2, 0xFFFFFF, &debug);
 
             for (int j = 0; j < level.sectors.n; j++) {
                 wall *cwall = level.sectors.arr[j].list.fwall;
                 while (cwall != NULL) {
                     
                     int color = cwall->portal ? 0xFF0000 : 0xFFFFFF;
-                    drawline(
-                            WorldPosToFramePos(cwall->a, zoom, &debug), 
-                            WorldPosToFramePos(cwall->b, zoom, &debug),
-                            1, color, &debug); 
+                    drawline
+                    (
+                        AddCameraOffset(WorldPosToFramePos(cwall->a, zoom, &debug), cameraOffset), 
+                        AddCameraOffset(WorldPosToFramePos(cwall->b, zoom, &debug), cameraOffset), 
+                        1, color, &debug
+                    ); 
                     
+                    if (mouse.dragging) {
+                        f32 drag_sensitivity = 0.1;
+                        cameraOffset.x -= (mouse.pos.x-mouse.pPos.x)*drag_sensitivity;
+                        cameraOffset.y -= (mouse.pos.y-mouse.pPos.y)*drag_sensitivity;
+                    }
                     cwall = cwall->next;
                 }
             }
             InvalidateRect(debug_hwnd, NULL, false);
             UpdateWindow(debug_hwnd);
+            mouse.pPos = mouse.pos;
         }
     }
     printf("=========================================\n");
@@ -266,16 +283,16 @@ static void HandleKeyboardInput(bool keyboard[]) {
     }
 
     if (keyboard['A']) {
-
+        player.pos.x -= 5;
     }
     if (keyboard['D']) {
-
+        player.pos.x += 5;
     }
     if (keyboard['S']) {
-
+        player.pos.y -= 5;
     }
     if (keyboard['W']) {
-
+        player.pos.y += 5;
     }
     if (keyboard[188]) {
         zoom -= 0.025;
@@ -486,8 +503,8 @@ LRESULT CALLBACK DebugWindowProc(HWND hwnd,
 			mouse.y = debug.height - 1 - HIWORD(lParam);
 		} break;
 
-		case WM_LBUTTONDOWN: mouse.buttons |=  MOUSE_LEFT;   break;
-		case WM_LBUTTONUP:   mouse.buttons &= ~MOUSE_LEFT;   break;
+		case WM_LBUTTONDOWN: mouse.buttons |=  MOUSE_LEFT; mouse.dragging = true; break;
+		case WM_LBUTTONUP:   mouse.buttons &= ~MOUSE_LEFT; mouse.dragging = false; break;
 		case WM_MBUTTONDOWN: mouse.buttons |=  MOUSE_MIDDLE; break;
 		case WM_MBUTTONUP:   mouse.buttons &= ~MOUSE_MIDDLE; break;
 		case WM_RBUTTONDOWN: mouse.buttons |=  MOUSE_RIGHT;  break;

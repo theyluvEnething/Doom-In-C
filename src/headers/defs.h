@@ -4,7 +4,15 @@
 #include "stdint.h"
 #include <stddef.h>
 
+#ifndef min
+#define min(a, b) ((a > b) ? b : a)
+#endif
+#ifndef max
+#define max(a, b) ((a > b) ? a : b)
+#endif
+
 #define abs(x) ((x < 0) ? -1 : 1)
+#define clamp(x, minVal, maxVal) (max(min(x, maxVal), minVal)) 
 
 typedef float    f32;
 typedef double   f64;

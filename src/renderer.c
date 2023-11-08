@@ -2,63 +2,86 @@
 #include "headers/frame.h"
 #include "headers/vector2.h"
 
+#include <stdio.h>
 #include <stdbool.h>
 
 void verline(v2 pos, int height, int color, struct frame* frame) {
-    if ((u16)pos.y+height > frame->height) return;
-    for (int i = (u16)pos.y; i < (u16)pos.y+height; i++) frame->pixels[i*frame->width+(u16)pos.x] = color;
+
+    if (pos.x < 0 || pos.x > frame->width) return;
+    u32 floor = ((pos.y > 0) ? pos.y : 0);
+    if (floor + height < 0) return;
+    u32 ceil = ((pos.y+height < frame->height) ? ceil = pos.y+height : frame->height);
+
+    for (u32 i = floor; i < ceil; i++) {
+        frame->pixels[(int)pos.x+frame->width*i] = color;
+    }
+}
+
+void drawpixel(v2 pos, int color, struct frame* frame) {
+    int px = pos.x+frame->width*pos.y;
+    if (px < 0 || px > frame->width*frame->height) return;
+    frame->pixels[px] = color;
 }
 
 void drawline(v2 v0, v2 v1, int width, int color, struct frame* frame) {
 
-    int x0 = v0.x, y0 = v0.y,
-        x1 = v1.x, y1 = v1.y;
+    // int x0 = clamp(v0.x, 0, frame->width),
+    //     y0 = clamp(v0.y, 0, frame->height),
+    //     x1 = clamp(v1.x, 0, frame->width),
+    //     y1 = clamp(v1.y, 0, frame->height);
 
-    int dx = abs(x1 - x0);
-    int dy = abs(y1 - y0);
-    bool slope = dy > dx;
+    int x0 = v0.x,
+        y0 = v0.y,
+        x1 = v1.x,
+        y1 = v1.y;
 
-    if (slope) {
-        int temp = x0;
-        x0 = y0;
-        y0 = temp;
+    int dx;
+    int dy;
 
-        temp = x1;
-        x1 = y1;
-        y1 = temp;
-    }
-    if (x0 > x1) {
-        int temp = x0;
-        x0 = x1;
-        x1 = temp;
+    if (x1 > x0)
+        dx = x1 - x0;
+    else
+        dx = x0 - x1;
+    if (y1 > y0)
+        dy = y1 - y0;
+    else
+        dy = y0 - y1;
 
-        temp = y0;
-        y0 = y1;
-        y1 = temp;
-    }
+    int sx = x0 < x1 ? 1 : -1;
+    int sy = y0 < y1 ? 1 : -1;
+    int err = (dx > dy ? dx : -dy) / 2, e2;
 
-    dx = abs((int)(x1 - x0));
-    dy = abs((int)(y1 - y0));
-    float error = dx / 2;
-    int y = y0;
-    int ystep =  y0 < y1 ? 1 : -1;
-    
-    for (int x = x0; x < x1; x++) {
+    for (;;) {
 
-        struct vector2 pos = slope ? vec2(y, x) : vec2(x, y);
-
-        for (int i = -width/2; i < width/2+1; i++) {
-            if (pos.x + i < 0 || pos.x + i > frame->width-1 || pos.y + i < 0 || pos.y + i > frame->height-1) continue;
-            frame->pixels[(uint32_t)(pos.x+i+frame->width*pos.y)%(frame->height*frame->width)] = color;
-            frame->pixels[(uint32_t)(pos.x+frame->width*(pos.y+i))] = color;
+        if (width > 1) {
+            for (int i = -width/2; i < width/2; i++) {
+                if (0+width/2 < x0+i && x0+i < frame->width-width/2 && 0+width/2 < y0+i && y0+i < frame->height-width/2) {
+                    u32 px = x0+frame->width*y0;
+                    frame->pixels[px+i] = color;
+                    frame->pixels[px+frame->width*i] = color;
+                }
+            }
+        } else {
+            if (0 < x0 && x0 < frame->width && 0 < y0 && y0 < frame->height) {
+                u32 px = x0+frame->width*y0;
+                frame->pixels[px] = color;
+            }
         }
 
-        error -= dy;
-        if (error < 0) {
-            y += ystep;
-            error += dx;
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        e2 = err;
+
+        if (e2 > -dx) {
+            err -= dy;
+            x0 += sx;
         }
-    }   
+        if (e2 < dy) {
+            err += dx;
+            y0 += sy;
+        }
+    }
 }
 
 void background(int color, struct frame* frame) {
@@ -77,4 +100,8 @@ v2 WorldPosToFramePos(v2 vec, f32 zoom, struct frame *frame) {
     f32 x = (vec.x/(10.0f/zoom))*frame->width,
         y = (vec.y/(10.0f/zoom))*frame->width;
     return vec2(x, y);
+}
+
+v2 AddCameraOffset(v2 vec, v2 camera) {
+    return (v2){vec.x-camera.x, vec.y-camera.y};
 }

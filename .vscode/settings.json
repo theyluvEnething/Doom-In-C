@@ -16,6 +16,7 @@
         "sdl.h": "c",
         "llib.h": "c",
         "var.h": "c",
-        "defs.h": "c"
+        "defs.h": "c",
+        "limits": "c"
     }
 }
