@@ -181,6 +181,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     }
 
     printf("\n");
+    // DOESNT WORK SADLY
     for (int i = 0; i < level.sectors.arr[1].list.n; i++) {
         printf(" [%i, %i] ", (int)level.sectors.arr[1].list.fwall[i].a.x, (int)level.sectors.arr[1].list.fwall[i].a.y);
     }
@@ -192,7 +193,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     printf("Size Wall: {%u}!\n", sizeof(struct wall));
     
     for (int j = 0; j < level.sectors.n; j++) {
-        printf("\n[%i] - Sector: %i\n > ", j, level.sectors.arr[j].list.n);
+        printf("\n[%i] - Sector: %i Wall(s)\n > ", j, level.sectors.arr[j].list.n);
         wall *cwall = level.sectors.arr[j].list.fwall;
         while (cwall != NULL) {
             printf("[(%i|%i)-(%i|%i)] ",
@@ -204,7 +205,23 @@ int WINAPI WinMain(HINSTANCE hInstance,
         printf("\n");
     }
 
-    printf("Sucessfully started");
+    for (int j = 0; j < level.sectors.n; j++) {
+        wall *cwall = level.sectors.arr[j].list.fwall;
+        while (cwall != NULL) {
+            
+            wall *vwall = level.sectors.arr[j].list.fwall;
+            while (vwall != NULL) { 
+                v2 intersection = check_intersect(cwall->a, cwall->b, vwall->a, vwall->b);
+                
+                printf("Lines intersecting at: (%i, %i)\n", (int)intersection.x, (int)intersection.y);
+                
+                vwall = vwall->next;
+            }
+            cwall = cwall->next;
+        }
+    }
+
+    printf("\nSucessfully started.\n");
 
 
     pTime = clock();

@@ -4,6 +4,14 @@
 #include "stdint.h"
 #include <stddef.h>
 
+#include <math.h>
+#ifdef NAN
+/* NAN is supported */
+#endif
+#ifdef INFINITY
+/* INFINITY is supported */
+#endif
+
 #ifndef min
 #define min(a, b) ((a > b) ? b : a)
 #endif
@@ -11,7 +19,6 @@
 #define max(a, b) ((a > b) ? a : b)
 #endif
 
-#define abs(x) ((x < 0) ? -1 : 1)
 #define clamp(x, minVal, maxVal) (max(min(x, maxVal), minVal)) 
 
 typedef float    f32;

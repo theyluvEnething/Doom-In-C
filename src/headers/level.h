@@ -10,8 +10,8 @@
 #define MAX_WALLS 256
 
 typedef struct {
-    v2 p1, p2;
-} lineseg;
+    v2 pA, pB;
+} line;
 
 typedef struct wall {
     v2 a, b;

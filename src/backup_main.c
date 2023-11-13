@@ -41,7 +41,7 @@ typedef struct vector2i { int x, y;} v2i;
 #define lineseg(vec0, vec1) (lineseg){vec0, vec1}
 
 typedef struct {
-    v2 p1, p2;
+    v2 p0, p1;
 } lineseg;
 
 typedef struct {

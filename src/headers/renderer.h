@@ -19,4 +19,6 @@ void drawpixel(v2 pos, int color, struct frame* frame);
 
 v2 WorldPosToFramePos(v2 vec, f32 zoom, struct frame *frame);
 v2 AddCameraOffset(v2 vec, v2 camera);
+
+v2 check_intersect(v2 a0, v2 a1, v2 b0, v2 b1);
 #endif

@@ -1,6 +1,7 @@
 #include "headers/defs.h"
 #include "headers/frame.h"
 #include "headers/vector2.h"
+#include "headers/level.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -96,12 +97,33 @@ bool is_minimized(struct frame* frame) {
     return frame->width == 0 || frame->height == 0; 
 }
 
+// fit lines to screen (probb. only needed for debug wnd)
 v2 WorldPosToFramePos(v2 vec, f32 zoom, struct frame *frame) {
     f32 x = (vec.x/(10.0f/zoom))*frame->width,
         y = (vec.y/(10.0f/zoom))*frame->width;
     return vec2(x, y);
 }
-
+ 
 v2 AddCameraOffset(v2 vec, v2 camera) {
     return (v2){vec.x-camera.x, vec.y-camera.y};
+}
+
+// check for line intersections, returns (NAN, NAN) if there is none
+v2 check_intersect(v2 a0, v2 a1, v2 b0, v2 b1) {
+ const f32 d =
+        ((a0.x - a1.x) * (b0.y - b1.y))
+            - ((a0.y - a1.y) * (b0.x - b1.x));
+
+    if (fabsf(d) < 0.000001f) { return (v2) { NAN, NAN }; }
+
+    const f32
+        t = (((a0.x - b0.x) * (b0.y - b1.y))
+                - ((a0.y - b0.y) * (b0.x - b1.x))) / d,
+        u = (((a0.x - b0.x) * (a0.y - a1.y))
+                - ((a0.y - b0.y) * (a0.x - a1.x))) / d;
+    return (t >= 0 && t <= 1 && u >= 0 && u <= 1) ?
+        ((v2) {
+            a0.x + (t * (a1.x - a0.x)),
+            a0.y + (t * (a1.y - a0.y)) })
+        : ((v2) { NAN, NAN });
 }
