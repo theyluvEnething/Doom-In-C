@@ -41,6 +41,7 @@ typedef struct {
 } Player;
 
 Player player = {0};
+v2 offset = {0};
 
 /* FRAME */
 struct frame frame = {0};
@@ -51,10 +52,14 @@ struct frame debug = {0};
 bool keyboard[256] = {0};
 struct {
     int x, y;
-    bool dragging;
+    bool dragging, up, down;
     v2 pos, pPos;
     uint_least8_t buttons;
 } mouse;
+
+
+
+
 enum 
 { 
     MOUSE_LEFT = 0b1, 
@@ -82,7 +87,7 @@ static bool mn_wnd_running = true; static bool mn_wnd_minimized = false;
 static bool db_wnd_running = true; static bool db_wnd_minimized = false;
 
 #define FPS 60
-const int frame_duration = 1000/FPS;
+const double frame_duration = 1000/FPS;
 clock_t pTime;
 f32 zoom = 1;
 
@@ -227,11 +232,29 @@ int WINAPI WinMain(HINSTANCE hInstance,
     pTime = clock();
 
     bool wasDragging = false;
-    v2 cameraOffset = (v2){0, 0};
     v2 dragDifference = (v2){0,0};
+
+
 
     while (mn_wnd_running || db_wnd_running) 
     {
+
+
+        
+
+        // struct tagRECT myRect = {0};
+
+        // myRect.left = 0;
+        // myRect.top = 0;
+        // myRect.bottom = 100;
+        // myRect.right = 200;
+
+        // const char *string = "Hello";
+        // DrawText(frame_device_context, string, -1, &myRect, DT_CALCRECT);
+
+    
+
+
         mouse.pos = (v2){mouse.x, mouse.y};
         clock_t cTime = clock();
         double elapsed = (double)(cTime - pTime) / CLOCKS_PER_SEC * 1000;
@@ -245,9 +268,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
         HandleKeyboardInput(keyboard);
 
 
-
         if (!is_minimized(&frame)) {
-            background(0x000000, &frame);
+            //background(0x000000, &frame);
             verline(vec2(200, 500), 100, 0xFFFFFF, &frame);
 
 
@@ -261,6 +283,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
             InvalidateRect(game_hwnd, NULL, false);
             UpdateWindow(game_hwnd);
         }
+
+
+
+
         if (!is_minimized(&debug)) {
             background(0x000000, &debug);
 
@@ -271,21 +297,58 @@ int WINAPI WinMain(HINSTANCE hInstance,
                     int color = cwall->portal ? 0xFF0000 : 0xFFFFFF;
                     drawline
                     (
-                        AddCameraOffset(WorldPosToFramePos(cwall->a, zoom, &debug), cameraOffset), 
-                        AddCameraOffset(WorldPosToFramePos(cwall->b, zoom, &debug), cameraOffset), 
+                        AddCameraOffset(WorldPosToFramePos(cwall->a, zoom, &debug), offset), 
+                        AddCameraOffset(WorldPosToFramePos(cwall->b, zoom, &debug), offset), 
                         1, color, &debug
                     ); 
                     
+                    //drawline(vec2(0, 0), AddCameraOffset(WorldPosToFramePos(cwall->b, zoom, &debug), offset), 10, 0x00FF00, &debug);
+
                     if (mouse.dragging) {
                         f32 drag_sensitivity = 0.1;
-                        cameraOffset.x -= (mouse.pos.x-mouse.pPos.x)*drag_sensitivity;
-                        cameraOffset.y -= (mouse.pos.y-mouse.pPos.y)*drag_sensitivity;
+                        offset.x -= (mouse.pos.x-mouse.pPos.x)*drag_sensitivity;
+                        offset.y -= (mouse.pos.y-mouse.pPos.y)*drag_sensitivity;
                     }
                     cwall = cwall->next;
                 }
             }
+
+            for (int i = 0; i < level.sectors.n; i++) {
+                wall *iwall = level.sectors.arr[i].list.fwall;
+                wall *iiwall = level.sectors.arr[i].list.fwall->next;
+                while (iwall != NULL && iiwall != NULL)
+                {
+                    v2 intersect = check_intersect(iwall->a, iwall->b, iiwall->a, iiwall->b);
+
+                    if (!isnan(intersect.x)) {
+                        printf("(%i, %i)\n", (int)intersect.x, (int)intersect.y);
+                        draw_center_circle(AddCameraOffset(WorldPosToFramePos(intersect, zoom, &debug), offset), 10, 0xFF0000, &debug);
+                        
+                        
+                        drawline(vec2(0, 0), AddCameraOffset(WorldPosToFramePos(intersect, zoom, &debug), offset), 10, 0xFFFFFF, &debug);
+                    }
+
+
+                    iwall = iwall->next;
+                }
+            }
+
+
+            SetBkMode(debug_device_context, TRANSPARENT);
+            SetTextColor(debug_device_context, 0xFFFFFF);
+            
+            char buff[16];
+            gcvt(1000/elapsed, 6, buff);
+            TextOut(debug_device_context, 10, 10, buff, TA_CENTER);
+
+
+
+
             InvalidateRect(debug_hwnd, NULL, false);
             UpdateWindow(debug_hwnd);
+
+            if (mouse.up) mouse.up = false;
+            else if (mouse.down) mouse.down = false;
             mouse.pPos = mouse.pos;
         }
     }
@@ -313,11 +376,14 @@ static void HandleKeyboardInput(bool keyboard[]) {
     }
     if (keyboard[188]) {
         zoom -= 0.025;
+        offset.x -= frame.width*0.01;
+        offset.y -= frame.height*0.01; 
     }
     if (keyboard[190]) {
         zoom += 0.025;
+        offset.x += frame.width*0.01;
+        offset.y += frame.height*0.01; 
     }
-
     return;
 }
 
@@ -540,6 +606,18 @@ LRESULT CALLBACK DebugWindowProc(HWND hwnd,
 
 		case WM_MOUSEWHEEL: {
 			printf("%s\n", wParam & 0b10000000000000000000000000000000 ? "Down" : "Up");
+
+            if (wParam & 0b10000000000000000000000000000000) {
+                mouse.down = true;
+                zoom -= 0.05;
+                offset.x -= frame.width*0.01;
+                offset.y -= frame.height*0.01; 
+            } else {
+                mouse.up = true;
+                zoom += 0.05;
+                offset.x += frame.width*0.01;
+                offset.y += frame.height*0.01; 
+            }
 		} break;
 
          /* DEFAULT */

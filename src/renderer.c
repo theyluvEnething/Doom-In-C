@@ -93,6 +93,19 @@ void background(int color, struct frame* frame) {
     }
 }
 
+void draw_center_circle(struct vector2 pos, int rad, int color, struct frame* frame) {
+    for (int y=pos.y-rad;y<pos.y+rad;y++) {
+        for (int x=pos.x-rad;x<pos.x+rad;x++) {
+            if (distance(x, y, pos.x, pos.y) >= rad/2) 
+                continue;
+
+            u16 pixel = x+frame->width*y;
+            if (pixel < 0 || pixel > frame->width*frame->height) continue;
+            frame->pixels[pixel] = color;
+        }
+    }
+}
+
 bool is_minimized(struct frame* frame) { 
     return frame->width == 0 || frame->height == 0; 
 }

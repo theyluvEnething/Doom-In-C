@@ -8,6 +8,9 @@
 #ifdef NAN
 /* NAN is supported */
 #endif
+#define ifnan(_x, _alt) ({ __typeof__(_x) __x = (_x); isnan(__x) ? (_alt) : __x; })
+
+
 #ifdef INFINITY
 /* INFINITY is supported */
 #endif
@@ -20,6 +23,7 @@
 #endif
 
 #define clamp(x, minVal, maxVal) (max(min(x, maxVal), minVal)) 
+#define distance(x0, y0, x1, y1) (sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)))
 
 typedef float    f32;
 typedef double   f64;
